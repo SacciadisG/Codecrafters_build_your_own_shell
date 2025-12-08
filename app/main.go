@@ -26,9 +26,9 @@ func main() {
 	// Switch on the command string (trimming the newline & return characters)
 	// For now, all commands are considered as 'invalid'
 	bufferedString := string(buffer[:numBytesRead])
-	commandString := strings.TrimSuffix(bufferedString, "\r\n")
+	commandString := strings.TrimSpace(bufferedString)
 	switch commandString {
 	default:
-		fmt.Printf("%s: command not found", commandString)
+		fmt.Printf("%s: command not found\n", commandString)
 	}
 }
