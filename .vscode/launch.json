@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Shell App",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/app",
+            "console": "integratedTerminal",
+            "env": {},
+            "args": [],
+            "showLog": true
+        }
+    ]
+}
