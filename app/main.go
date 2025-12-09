@@ -29,6 +29,8 @@ func main() {
 		bufferedString := string(buffer[:numBytesRead])
 		commandString := strings.TrimSpace(bufferedString)
 		switch commandString {
+		case "exit":
+			return
 		default:
 			fmt.Printf("%s: command not found\n", commandString)
 		}
