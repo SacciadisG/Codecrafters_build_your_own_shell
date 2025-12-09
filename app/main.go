@@ -27,10 +27,13 @@ func main() {
 		// Switch on the command string (trimming the newline & return characters)
 		// For now, all commands are considered as 'invalid'
 		bufferedString := string(buffer[:numBytesRead])
-		commandString := strings.TrimSpace(bufferedString)
+		argsSplicedFromBuffer := strings.Fields(bufferedString)
+		commandString, inputArgs := argsSplicedFromBuffer[0], argsSplicedFromBuffer[1:]
 		switch commandString {
 		case "exit":
 			return
+		case "echo":
+			fmt.Println(strings.Join(inputArgs, " "))
 		default:
 			fmt.Printf("%s: command not found\n", commandString)
 		}
