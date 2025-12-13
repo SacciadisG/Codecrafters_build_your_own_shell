@@ -54,8 +54,10 @@ func main() {
 			if slices.Contains(builtinCommands, firstArgument) {
 				fmt.Printf("%s is a shell builtin\n", firstArgument)
 			} else {
+				fileFound := false
 				pathEnv := os.Getenv("PATH")
 				paths := filepath.SplitList(pathEnv) // Splitting is done in an OS-agnostic way
+
 				for _, dirPath := range paths {
 					fileFullPath := filepath.Join(dirPath, firstArgument)
 					fileInfo, err := os.Stat(fileFullPath)
@@ -65,13 +67,17 @@ func main() {
 					}
 					if IsExecByAny(fileInfo.Mode()) {
 						fmt.Printf("%s is %s\n", firstArgument, fileFullPath)
+						fileFound = true
 						break
 					} else {
 						// File exists but isn't executable, continue to next dir
 						continue
 					}
 				}
-				fmt.Printf("%s: not found\n", firstArgument)
+
+				if !fileFound {
+					fmt.Printf("%s: not found\n", firstArgument)
+				}
 			}
 		default:
 			fmt.Printf("%s: command not found\n", commandString)
