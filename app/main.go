@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 )
@@ -13,6 +14,11 @@ var _ = fmt.Fprint
 var _ = os.Stdout
 
 var builtinCommands []string = []string{"exit", "echo", "type"}
+
+// Checks if any execute permissions (by Owner, Group, or Others) are set on the given file mode
+func IsExecByAny(mode os.FileMode) bool {
+	return mode&0111 != 0
+}
 
 func main() {
 
@@ -33,16 +39,39 @@ func main() {
 		argsSplicedFromBuffer := strings.Fields(bufferedString)
 		commandString, inputArgs := argsSplicedFromBuffer[0], argsSplicedFromBuffer[1:]
 
+		// TODO: Assuming that inputArgs always has at least one element for now.
+
 		switch commandString {
+
 		case "exit":
 			return
+
 		case "echo":
 			fmt.Println(strings.Join(inputArgs, " "))
+
 		case "type":
-			if len(inputArgs) > 2 || (!slices.Contains(builtinCommands, inputArgs[0])) {
-				fmt.Printf("%s: not found\n", inputArgs[0])
+			firstArgument := inputArgs[0]
+			if slices.Contains(builtinCommands, firstArgument) {
+				fmt.Printf("%s is a shell builtin\n", firstArgument)
 			} else {
-				fmt.Printf("%s is a shell builtin\n", inputArgs[0])
+				pathEnv := os.Getenv("PATH")
+				paths := filepath.SplitList(pathEnv) // Splitting is done in an OS-agnostic way
+				for _, dirPath := range paths {
+					fileFullPath := filepath.Join(dirPath, firstArgument)
+					fileInfo, err := os.Stat(fileFullPath)
+					if err != nil {
+						// File doesn't exist in this dir, continue to next dir
+						continue
+					}
+					if IsExecByAny(fileInfo.Mode()) {
+						fmt.Printf("%s is %s\n", firstArgument, fileFullPath)
+						break
+					} else {
+						// File exists but isn't executable, continue to next dir
+						continue
+					}
+				}
+				fmt.Printf("%s: not found\n", firstArgument)
 			}
 		default:
 			fmt.Printf("%s: command not found\n", commandString)
