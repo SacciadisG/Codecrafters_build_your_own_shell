@@ -94,7 +94,7 @@ func main() {
 			}
 			cmd := exec.Command(commandString, inputArgs...)
 			output, _ := cmd.Output()
-			fmt.Println(string(output))
+			fmt.Print(string(output))
 		}
 	}
 }
