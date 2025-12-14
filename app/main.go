@@ -85,6 +85,7 @@ func main() {
 					fmt.Printf("%s not found\n", firstArgument)
 				}
 			}
+
 		default:
 			executablePath := FindPathOfGivenExecutable(commandString)
 			if executablePath == "" {
@@ -93,6 +94,7 @@ func main() {
 			}
 			cmd := exec.Command(executablePath, inputArgs...)
 			cmd.Run()
+			fmt.Print("Does this work?\n")
 		}
 	}
 }
