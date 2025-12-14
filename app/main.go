@@ -14,7 +14,7 @@ import (
 var _ = fmt.Fprint
 var _ = os.Stdout
 
-var builtinCommands []string = []string{"exit", "echo", "type"}
+var builtinCommands []string = []string{"exit", "echo", "type", "pwd"}
 
 // Checks if any execute permissions (by Owner, Group, or Others) are set on the given file mode
 func IsExecByAny(mode os.FileMode) bool {
@@ -72,6 +72,14 @@ func main() {
 
 		case "echo":
 			fmt.Println(strings.Join(inputArgs, " "))
+
+		case "pwd":
+			currentDir, err := os.Getwd()
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error getting current directory: %v\n", err)
+				continue
+			}
+			fmt.Println(currentDir)
 
 		case "type":
 			firstArgument := inputArgs[0]
