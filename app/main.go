@@ -14,11 +14,22 @@ import (
 var _ = fmt.Fprint
 var _ = os.Stdout
 
-var builtinCommands []string = []string{"exit", "echo", "type", "pwd"}
+var builtinCommands []string = []string{"exit", "echo", "type", "pwd", "cd"}
 
 // Checks if any execute permissions (by Owner, Group, or Others) are set on the given file mode
 func IsExecByAny(mode os.FileMode) bool {
 	return mode&0111 != 0
+}
+
+func IsDirectory(dirPath string) (bool, error) {
+	fileInfo, err := os.Stat(dirPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
+		return false, err
+	}
+	return fileInfo.IsDir(), nil
 }
 
 // Returns the full path of the given executable if found anywhere in the PATH environment variable.
@@ -80,6 +91,26 @@ func main() {
 				continue
 			}
 			fmt.Println(currentDir)
+
+		// func Chdir(dir string) error
+		// For now, we're focusing on absolute paths only.
+		case "cd":
+			targetDir := inputArgs[0]
+			isDir, err := IsDirectory(targetDir)
+
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error checking directory: %v\n", err)
+				continue
+			} else if !isDir {
+				fmt.Fprintf(os.Stderr, "cd: %s: No such file or directory\n", targetDir)
+				continue
+			}
+
+			err = os.Chdir(targetDir)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error changing directory: %v\n", err)
+				continue
+			}
 
 		case "type":
 			firstArgument := inputArgs[0]
