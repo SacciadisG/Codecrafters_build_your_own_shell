@@ -93,8 +93,8 @@ func main() {
 				continue
 			}
 			cmd := exec.Command(executablePath, inputArgs...)
-			cmd.Run()
-			fmt.Print("Does this work?\n")
+			output, _ := cmd.Output()
+			fmt.Println(string(output))
 		}
 	}
 }
