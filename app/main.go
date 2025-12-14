@@ -92,7 +92,7 @@ func main() {
 				fmt.Printf("%s: command not found\n", commandString)
 				continue
 			}
-			cmd := exec.Command(executablePath, inputArgs...)
+			cmd := exec.Command(commandString, inputArgs...)
 			output, _ := cmd.Output()
 			fmt.Println(string(output))
 		}
