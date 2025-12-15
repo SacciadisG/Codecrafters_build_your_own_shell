@@ -96,6 +96,17 @@ func main() {
 		// For now, we're focusing on absolute paths only.
 		case "cd":
 			targetDir := inputArgs[0]
+
+			// Special case: if the targetDir is "~", change to HOME directory
+			if targetDir == "~" {
+				homeDir, err := os.UserHomeDir()
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Error getting home directory: %v\n", err)
+					continue
+				}
+				targetDir = homeDir
+			}
+
 			isDir, err := IsDirectory(targetDir)
 
 			if err != nil {
