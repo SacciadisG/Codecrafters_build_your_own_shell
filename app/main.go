@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"slices"
 	"strings"
 )
@@ -15,45 +14,6 @@ var _ = fmt.Fprint
 var _ = os.Stdout
 
 var builtinCommands []string = []string{"exit", "echo", "type", "pwd", "cd"}
-
-// Checks if any execute permissions (by Owner, Group, or Others) are set on the given file mode
-func IsExecByAny(mode os.FileMode) bool {
-	return mode&0111 != 0
-}
-
-func IsDirectory(dirPath string) (bool, error) {
-	fileInfo, err := os.Stat(dirPath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return false, nil
-		}
-		return false, err
-	}
-	return fileInfo.IsDir(), nil
-}
-
-// Returns the full path of the given executable if found anywhere in the PATH environment variable.
-// If not found, returns an empty string.
-func FindPathOfGivenExecutable(executableName string) string {
-	pathEnv := os.Getenv("PATH")
-	paths := filepath.SplitList(pathEnv) // Splitting is done in an OS-agnostic way
-
-	for _, dirPath := range paths {
-		fileFullPath := filepath.Join(dirPath, executableName)
-		fileInfo, err := os.Stat(fileFullPath)
-		if err != nil {
-			// File doesn't exist in this dir, continue to next dir
-			continue
-		}
-		if IsExecByAny(fileInfo.Mode()) {
-			return fileFullPath
-		} else {
-			// File exists but isn't executable, continue to next dir
-			continue
-		}
-	}
-	return ""
-}
 
 func main() {
 
@@ -68,13 +28,13 @@ func main() {
 			return
 		}
 
-		// Switch on the command string (trimming the newline & return characters)
-		// For now, all commands are considered as 'invalid'
 		bufferedString := string(buffer[:numBytesRead])
-		argsSplicedFromBuffer := strings.Fields(bufferedString)
+		argsSplicedFromBuffer := ParseStdinBufferString(bufferedString)
+		if len(argsSplicedFromBuffer) == 0 {
+			// No command entered, continue to next loop iteration
+			continue
+		}
 		commandString, inputArgs := argsSplicedFromBuffer[0], argsSplicedFromBuffer[1:]
-
-		// TODO: Assuming that inputArgs always has at least one element for now. Handle edge cases later.
 
 		switch commandString {
 
@@ -92,8 +52,6 @@ func main() {
 			}
 			fmt.Println(currentDir)
 
-		// func Chdir(dir string) error
-		// For now, we're focusing on absolute paths only.
 		case "cd":
 			targetDir := inputArgs[0]
 
@@ -108,7 +66,6 @@ func main() {
 			}
 
 			isDir, err := IsDirectory(targetDir)
-
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Error checking directory: %v\n", err)
 				continue
