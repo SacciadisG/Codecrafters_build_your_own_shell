@@ -47,27 +47,38 @@ func FindPathOfGivenExecutable(executableName string) string {
 	return ""
 }
 
-// Parses the given stdin buffer string into a slice of arguments.
-// Handles single quotes to allow spaces within arguments.
+// ParseStdinBufferString splits a string into arguments using the following rules:
+//  1. Whitespace is a delimiter only outside of quotes.
+//  2. Inside ” or "", all characters (including spaces) are treated literally.
+//  3. Quotes of one type lose their special meaning inside quotes of the other type.
+//  4. Adjacent segments (quoted or unquoted) are concatenated into a single argument.
 func ParseStdinBufferString(s string) []string {
 	var result []string
 	var current strings.Builder
-	inQuotes, hasContent := false, false
+	var activeQuote rune // Tracks ' or "; 0 means no active quote
+	hasContent := false
 
 	for _, char := range s {
 		switch {
-		case char == '\'':
-			inQuotes = !inQuotes // Toggle mode
-			hasContent = true    // Even an empty quote '' counts as content
-		case inQuotes:
-			current.WriteRune(char)
+		case activeQuote != 0:
+			if char == activeQuote {
+				activeQuote = 0   // Close the quote block
+				hasContent = true // Mark that we have an argument in progress (concatenation)
+			} else {
+				current.WriteRune(char)
+			}
+
+		case char == '\'' || char == '"':
+			activeQuote = char
 			hasContent = true
+
 		case isWhitespace(char):
 			if hasContent {
 				result = append(result, current.String())
 				current.Reset()
 				hasContent = false
 			}
+
 		default:
 			current.WriteRune(char)
 			hasContent = true
