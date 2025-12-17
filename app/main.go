@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-// Ensures gofmt doesn't remove the "fmt" and "os" imports in stage 1 (feel free to remove this!)
+// Ensures gofmt doesn't remove the "fmt" and "os" imports in stage 1 (can remove later)
 var _ = fmt.Fprint
 var _ = os.Stdout
 
