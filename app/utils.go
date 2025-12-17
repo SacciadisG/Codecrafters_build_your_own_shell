@@ -56,10 +56,12 @@ func ParseStdinBufferString(s string) []string {
 	var result []string
 	var current strings.Builder
 	var activeQuote rune // Tracks ' or "; 0 means no active quote
+	var escapeNext bool  // Tracks if the next character should be escaped
 	hasContent := false
 
 	for _, char := range s {
 		switch {
+		// In quotes
 		case activeQuote != 0:
 			if char == activeQuote {
 				activeQuote = 0   // Close the quote block
@@ -67,6 +69,14 @@ func ParseStdinBufferString(s string) []string {
 			} else {
 				current.WriteRune(char)
 			}
+
+		// Not in quotes, for all cases below
+		case escapeNext:
+			current.WriteRune(char)
+			escapeNext = false
+
+		case char == '\\':
+			escapeNext = true
 
 		case char == '\'' || char == '"':
 			activeQuote = char
