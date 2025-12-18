@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 )
 
@@ -55,28 +56,41 @@ func FindPathOfGivenExecutable(executableName string) string {
 func ParseStdinBufferString(s string) []string {
 	var result []string
 	var current strings.Builder
-	var activeQuote rune // Tracks ' or "; 0 means no active quote
-	var escapeNext bool  // Tracks if the next character should be escaped
+	var activeQuote rune                     // Tracks ' or ". 0 means no active quote
+	escapedSpecialChars := []rune{'"', '\\'} // Characters that can be escaped within double quotes
 	hasContent := false
 
-	for _, char := range s {
+	for i := 0; i < len(s); i++ {
+		char := rune(s[i])
 		switch {
-		// In quotes
+		// In quote blocks
 		case activeQuote != 0:
-			if char == activeQuote {
+			switch {
+			case char == '\\' && activeQuote == '"':
+				if i+1 < len(s) && slices.Contains(escapedSpecialChars, rune(s[i+1])) {
+					current.WriteRune(rune(s[i+1]))
+					i++ // Skip the next character as it's been escaped
+				} else {
+					current.WriteRune(char)
+				}
+
+			case char == activeQuote:
 				activeQuote = 0   // Close the quote block
 				hasContent = true // Mark that we have an argument in progress (concatenation)
-			} else {
+
+			default:
 				current.WriteRune(char)
 			}
 
-		// Not in quotes, for all cases below
-		case escapeNext:
-			current.WriteRune(char)
-			escapeNext = false
-
+		// Outside quote blocks
 		case char == '\\':
-			escapeNext = true
+			if i+1 < len(s) {
+				current.WriteRune(rune(s[i+1]))
+				i++ // Skip the next character as it's been escaped
+			} else {
+				current.WriteRune(char)
+			}
+			hasContent = true
 
 		case char == '\'' || char == '"':
 			activeQuote = char
